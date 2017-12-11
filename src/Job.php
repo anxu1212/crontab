@@ -3,10 +3,11 @@
 namespace anxu\Crontab;
 
 use Yii;
-use yii\console\Exception;
+
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidParamException;
+use yii\console\Exception;
 
 /**
  * job class

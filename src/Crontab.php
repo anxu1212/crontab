@@ -4,10 +4,9 @@ namespace anxu\Crontab;
 
 use Yii;
 use yii\base\Component;
-use yii\helpers\ArrayHelper;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
-use Symfony\Component\Process\PhpExecutableFinder;
+use yii\helpers\ArrayHelper;
 
 /**
 * Crontab class
