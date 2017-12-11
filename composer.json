@@ -1,7 +1,7 @@
 {
     "name": "anxu/crontab",
-    "description":      "this is test",
-    "keywords":         ["crontab"],
+    "description":      "crontab for yii2 framework",
+    "keywords":         ["crontab","yii2"],
     "license":          "MIT",
     "require": {
         "php": ">=5.4.0",
