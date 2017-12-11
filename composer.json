@@ -1,0 +1,21 @@
+{
+    "name": "anxu/crontab",
+    "description":      "this is test",
+    "keywords":         ["crontab"],
+    "license":          "MIT",
+    "require": {
+        "php": ">=5.4.0",
+        "yiisoft/yii2": "~2.0.5",
+        "mtdowling/cron-expression": "^1.0",
+        "symfony/process":"*"
+    },
+    "require-dev": {
+        "yiisoft/yii2-faker": "~2.0.0",
+        "codeception/base": "^2.3"
+    },
+    "autoload": {
+      "psr-4": {
+        "anxu\\Crontab\\": "src/"
+      }
+    }
+}
