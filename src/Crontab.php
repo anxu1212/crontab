@@ -16,10 +16,7 @@ class Crontab extends Component
 
     private $defaultJobClass = 'anxu\Crontab\Job';
 
-
-    public $bin = 'yii';
-
-    protected $jobs = [];
+    private $jobs = [];
 
 
     public function __construct(array $config = [])
@@ -31,11 +28,13 @@ class Crontab extends Component
     /**
      * Add a job.
      * [
-     *   'class'=>'anxu\Crontab\Job'
-     *   'name'=>'',
-     *   'schedule'=>'',
-     *   'command'=>'',
-     *   'maxRuntime'=>''
+     *  [
+     *      'class'=>'anxu\Crontab\Job'
+     *      'name'=>'',
+     *      'schedule'=>'',
+     *      'command'=>'',
+     *      'maxRuntime'=>''
+     *  ]
      * ]
      *
      * @param array $job
@@ -45,10 +44,6 @@ class Crontab extends Component
     public function add(array $jobs)
     {
         foreach ($jobs as $job) {
-            if (empty($job['schedule']) || !isset($job['command']) || !isset($job['name'])) {
-                throw new InvalidConfigException("'schedule','command','name' is required");
-            }
-
             $this->jobs[$job['name']] = ArrayHelper::merge(['class'=>$this->defaultJobClass], $job);
         }
     }

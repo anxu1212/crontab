@@ -57,3 +57,5 @@ class DemoController extends Controller
 |`schedule`|任务执行时间|必须，支持`"* * * * *"`也支持`"Y-m-d H:i:s"`|
 |`command`|命令 |必须， shell 命令|
 |`output`|命令输入路径|如果命令有输出，则可以指定输出位置|
+
+> "Y-m-d H:i:s" 格式，后面的 秒s  会被忽略；

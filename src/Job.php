@@ -29,7 +29,7 @@ class Job extends Component
 
  
     public $name;
-    public $schedule;
+    public $schedule="* * * * *";
     public $command;
     public $maxRuntime =null;
     public $output =null;
@@ -40,7 +40,10 @@ class Job extends Component
     public function __construct(array $job)
     {
         if (!isset($job['schedule']) || !isset($job['command'])) {
-            throw new Exception('"schedule" and "command" is required!');
+            throw new InvalidConfigException('"schedule" and "command" is required!');
+        }
+        if (empty($job['schedule']) || !isset($job['command']) || !isset($job['name'])) {
+            throw new InvalidConfigException("'schedule','command','name' is required");
         }
         $this->tmpDir = $this->getTempDir();
         parent::__construct($job);
