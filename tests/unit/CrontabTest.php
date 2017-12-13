@@ -34,7 +34,7 @@ class CrontabTest extends \Codeception\Test\Unit
     {
         $jobs=[
             [
-                'name'=>'223',
+                'name'=>'demo',
                 'schedule'=>'* * * * *',
                 'command'=>'echo "hello world!"',
                 'output'=>$this->logFile
@@ -47,14 +47,14 @@ class CrontabTest extends \Codeception\Test\Unit
 
         sleep(1);
 
-        $this->assertContains('hello world!', $this->getLogContent(), "命令没有执行");
+        $this->assertContains('hello world!', $this->getLogContent());
     }
 
     public function testTheDatetimeFormatIsSupport()
     {
         $jobs=[
             [
-                'name'=>'223',
+                'name'=>'demo',
                 'schedule'=>date('Y-m-d H:i:s'),
                 'command'=>'echo "hello world!"',
                 'output'=>$this->logFile
@@ -67,14 +67,14 @@ class CrontabTest extends \Codeception\Test\Unit
 
         sleep(1);
 
-        $this->assertContains('hello world!', $this->getLogContent(), "datetime格式日期，测试有问题");
+        $this->assertContains('hello world!', $this->getLogContent());
     }
 
-    public function testCommandShouldNotRun()
+    public function testIfDatetimeIsWrongCommandShouldNotRun()
     {
         $jobs=[
             [
-                'name'=>'223',
+                'name'=>'demo',
                 'schedule'=>date('Y-m-d H:i:s', strtotime('+1 minute')),
                 'command'=>'echo "hello world!"',
                 'output'=>$this->logFile
@@ -85,13 +85,35 @@ class CrontabTest extends \Codeception\Test\Unit
         $cron->run();
         sleep(1);
 
-        $this->assertFileNotExists($this->logFile, "命令被执行");
+        $this->assertFileNotExists($this->logFile);
     }
 
-    public function testJobAdd()
+    public function testRunMultipleJobs()
     {
-        
+        $jobs=[
+            [
+                'name'=>'test',
+                'schedule'=>"* * * * *",
+                'command'=>'echo "job_1"',
+                'output'=>$this->logFile
+            ],[
+                'name'=>'demo',
+                'schedule'=>"* * * * *",
+                'command'=>'echo "job_2"',
+                'output'=>$this->logFile
+            ],
+        ];
+        $a  = new Crontab();
+        $a->add($jobs);
+
+        $a->run();
+
+        sleep(1);
+
+        $this->assertContains('job_1', $this->getLogContent());
+        $this->assertContains('job_2', $this->getLogContent());
     }
+
 
 
     private function getLogContent()

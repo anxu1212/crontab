@@ -58,33 +58,9 @@ class Crontab extends Component
         }
         
         foreach ($this->jobs as $job) {
-            if (!$this->isDo($job['schedule'])) {
-                continue;
-            }
-            
-            $this->runJob($job);
+            $jobObj = $this->createJob($job);
+            $jobObj->run();
         }
-    }
-
-
-    protected function isDo(string $schedule)
-    {
-        $dateTime = \DateTime::createFromFormat('Y-m-d H:i:s', $schedule);
-        if ($dateTime !== false) {
-            return $dateTime->format('Y-m-d H:i') == (date('Y-m-d H:i'));
-        }
-
-        return   \Cron\CronExpression::factory($schedule)->isDue();
-    }
-
-    /**
-     * @param string $job
-     * @param array  $config
-     */
-    protected function runJob(array $job)
-    {
-        $jobObj = $this->createJob($job);
-        $jobObj->run();
     }
 
 

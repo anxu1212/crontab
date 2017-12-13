@@ -6,8 +6,8 @@ use Yii;
 
 use yii\base\Component;
 use yii\base\InvalidConfigException;
-use yii\base\InvalidParamException;
 use yii\console\Exception;
+use \Cron\CronExpression;
 
 /**
  * job class
@@ -25,8 +25,6 @@ class Job extends Component
     */
     protected $tmpDir;
 
-
-
  
     public $name;
     public $schedule="* * * * *";
@@ -39,10 +37,7 @@ class Job extends Component
     */
     public function __construct(array $job)
     {
-        if (!isset($job['schedule']) || !isset($job['command'])) {
-            throw new InvalidConfigException('"schedule" and "command" is required!');
-        }
-        if (empty($job['schedule']) || !isset($job['command']) || !isset($job['name'])) {
+        if (empty($job['schedule']) || empty($job['command']) || empty($job['name'])) {
             throw new InvalidConfigException("'schedule','command','name' is required");
         }
         $this->tmpDir = $this->getTempDir();
@@ -56,24 +51,37 @@ class Job extends Component
     */
     public function run()
     {
-        $tmpFile = $this->tmpFilePath();
-        try {
-            $this->checkMaxRuntime($tmpFile);
-        } catch (Exception $e) {
-            Yii::error("job:".$this->name ."Error:". $e->getMessage());
+
+        if (!$this->isDo()) {
             return;
         }
 
         try {
-            $this->lockFile($tmpFile);
+            $tmpFile = $this->tmpFilePath();
+            
+            $this->checkMaxRuntime($tmpFile); //检查上一次执行是否超时
+    
+            $this->lockFile($tmpFile); //为该任务创建一个临时文件，保证每次只有一个任务进程执行
+    
             $this->runCommand();
         } catch (Exception $e) {
             Yii::error("job:".$this->name ."Error:". $e->getMessage());
             return;
         }
+
         if ($this->tmpfileHandle !==null) {
             $this->unlockFile($tmpFile);
         }
+    }
+
+    protected function isDo()
+    {
+        $dateTime = \DateTime::createFromFormat('Y-m-d H:i:s', $this->schedule);
+        if ($dateTime !== false) {
+            return $dateTime->format('Y-m-d H:i') == (date('Y-m-d H:i'));
+        }
+
+        return CronExpression::factory($this->schedule)->isDue();
     }
     /**
      * 根据临时文件检查执行是否超时
@@ -98,7 +106,7 @@ class Job extends Component
      * 创建一个临时文件，防止重复执行
      * @param  string $tmpFile
      */
-    public function lockFile(string $tmpFile)
+    protected function lockFile(string $tmpFile)
     {
         if (!file_exists($tmpFile) && !touch($tmpFile)) {
             throw new Exception("Unable to create file (File: $tmpFile).");
@@ -130,7 +138,7 @@ class Job extends Component
      *
      * @throws Exception
      */
-    public function unlockFile($tmpFile)
+    protected function unlockFile($tmpFile)
     {
         ftruncate($this->tmpfileHandle, 0);
         flock($this->tmpfileHandle, LOCK_UN);
