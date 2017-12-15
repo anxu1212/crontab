@@ -3,7 +3,6 @@
 namespace anxu\Crontab;
 
 use Yii;
-
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\console\Exception;
@@ -65,7 +64,7 @@ class Job extends Component
     
             $this->runCommand();
         } catch (Exception $e) {
-            Yii::error("job:".$this->name ."Error:". $e->getMessage());
+            Yii::error("job:".$this->name."Error:".$e->getMessage(), __METHOD__);
             return;
         }
 
@@ -96,10 +95,10 @@ class Job extends Component
 
         $runtime = $this->getFileMtime($tmpFile);
 
-        if ($runtime < $maxRuntime) {
+        if ($runtime < $this->maxRuntime) {
             return;
         }
-        throw new Exception("MaxRuntime of $maxRuntime secs exceeded! Current runtime: $runtime secs");
+        throw new Exception("MaxRuntime of $this->maxRuntime secs exceeded! Current runtime: $runtime secs");
     }
 
     /**

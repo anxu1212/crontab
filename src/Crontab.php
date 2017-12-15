@@ -17,6 +17,11 @@ class Crontab extends Component
     private $defaultJobClass = 'anxu\Crontab\Job';
 
     private $jobs = [];
+    private $currentProcess =0;
+
+    public $maxProcess=2;
+    public $isMuteProcess=false;
+
 
 
     public function __construct(array $config = [])
@@ -56,10 +61,44 @@ class Crontab extends Component
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             throw new NotSupportedException('Window is not supported');
         }
-        
+        if ($this->isMuteProcess) {
+            $this->multiProcessRun();
+        } else {
+            $this->commonRun();
+        }
+    }
+
+    /**
+     * Run all jobs.
+     */
+    public function commonRun()
+    {
         foreach ($this->jobs as $job) {
             $jobObj = $this->createJob($job);
             $jobObj->run();
+        }
+    }
+    /**
+     * Multi-process Run all jobs.
+     */
+    public function multiProcessRun()
+    {
+        foreach ($this->jobs as $job) {
+            $pid = pcntl_fork();
+            if ($pid == -1) {
+                throw new Exception('fork process failed');
+            } elseif ($pid) {
+                $this->currentProcess++;
+                if ($this->currentProcess >= $this->maxProcess) {
+                    pcntl_wait($status, WUNTRACED);
+                    $this->currentProcess--;
+                }
+            } else {
+                cli_set_process_title("phpCrontab");//子进程名
+                $jobObj = $this->createJob($job);
+                $jobObj->run();
+                exit();
+            }
         }
     }
 

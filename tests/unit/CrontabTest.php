@@ -114,10 +114,50 @@ class CrontabTest extends \Codeception\Test\Unit
         $this->assertContains('job_2', $this->getLogContent());
     }
 
-
-
-    private function getLogContent()
+    public function testRunJobsWithMultiProcess()
     {
-        return file_get_contents($this->logFile);
+        $jobs=[
+            [
+                'name'=>'job1',
+                'schedule'=>"* * * * *",
+                'command'=>'sleep 10;echo "job_1"',
+                'output'=>$this->logFile
+            ],[
+                'name'=>'job2',
+                'schedule'=>"* * * * *",
+                'command'=>'sleep 10;echo "job_2"',
+                'output'=>$this->logFile
+            ],[
+                'name'=>'job3',
+                'schedule'=>"* * * * *",
+                'command'=>'sleep 10;echo "job_3"',
+                'output'=>$this->logFile
+            ],[
+                'name'=>'job4',
+                'schedule'=>"* * * * *",
+                'command'=>'sleep 10;echo "job_4"',
+                'output'=>$this->logFile,
+                'maxRuntime'=>5
+            ],
+            
+        ];
+        $a  = new Crontab([
+            'isMuteProcess'=>true
+        ]);
+        $a->add($jobs);
+
+        $a->run();
+        sleep(1);
+        $this->assertContains('job_1', $this->getLogContent());
+        $this->assertContains('job_3', $this->getLogContent());
+        sleep(10);
+        $this->assertContains('job_2', $this->getLogContent());
+        $this->assertContains('job_4', $this->getLogContent());
+    }
+
+
+    private function getLogContent(string $path = null)
+    {
+        return $path ?file_get_contents($path):file_get_contents($this->logFile);
     }
 }
