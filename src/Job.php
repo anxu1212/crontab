@@ -3,15 +3,16 @@
 namespace anxu\Crontab;
 
 use Yii;
-use yii\base\Component;
+use yii\base\BaseObject;
 use yii\base\InvalidConfigException;
+use anxu\Crontab\BaseJob;
 use yii\console\Exception;
 use \Cron\CronExpression;
 
 /**
  * job class
  */
-class Job extends Component
+class Job extends BaseObject implements BaseJob
 {
     /**
      * resource $tmpfileHandle
@@ -26,23 +27,21 @@ class Job extends Component
 
  
     public $name;
-    public $schedule="* * * * *";
+    public $schedule;
     public $command;
     public $maxRuntime =null;
     public $output =null;
-    /**
-    * @param string $job
-    * @param array  $config
-    */
-    public function __construct(array $job)
+
+
+    public function init()
     {
-        if (empty($job['schedule']) || empty($job['command']) || empty($job['name'])) {
+        parent::init();
+
+        if (empty($this->schedule) || empty($this->command) || empty($this->name)) {
             throw new InvalidConfigException("'schedule','command','name' is required");
         }
         $this->tmpDir = $this->getTempDir();
-        parent::__construct($job);
     }
-
 
     /**
     * job run

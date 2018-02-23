@@ -1,6 +1,7 @@
 <?php
 namespace anxu\tests;
 
+use Yii;
 use anxu\Crontab\Job;
 use yii\base\InvalidConfigException;
 
@@ -27,9 +28,27 @@ class JobTest extends \Codeception\Test\Unit
             unlink($this->logFile);
         }
     }
+    // tests
+    public function testCreateJob()
+    {
+        $job = [
+            'class'=>'anxu\Crontab\Job',
+            'name'=>'demo',
+            'schedule'=>'* * * * *',
+            'command'=>'echo "hello world!"',
+            'output'=>$this->logFile
+        ];
+
+        $jobObj = Yii::createObject($job);
+
+        $this->assertEquals($jobObj->name, $job['name']);
+        $this->assertEquals($jobObj->schedule, $job['schedule']);
+        $this->assertEquals($jobObj->command, $job['command']);
+        $this->assertEquals($jobObj->output, $job['output']);
+    }
 
     // tests
-    public function testJobCreate()
+    public function testNewJob()
     {
         $job = [
             'name'=>'demo',
@@ -37,7 +56,7 @@ class JobTest extends \Codeception\Test\Unit
             'command'=>'echo "hello world!"',
             'output'=>$this->logFile
         ];
-        $jobObj = new job($job);
+        $jobObj = new Job($job);
 
         $this->assertEquals($jobObj->name, $job['name']);
         $this->assertEquals($jobObj->schedule, $job['schedule']);
@@ -53,7 +72,7 @@ class JobTest extends \Codeception\Test\Unit
             'command'=>'echo "hello world!"',
             'output'=>$this->logFile
         ];
-        $jobObj = new job($job);
+        $jobObj = new Job($job);
 
         $jobObj->run();
 
@@ -66,7 +85,7 @@ class JobTest extends \Codeception\Test\Unit
     {
         $msg='';
         try {
-            new job([
+            new Job([
                 'schedule'=>'* * * * *',
                 'command'=>'echo "hello world!"'
             ]);
@@ -80,8 +99,9 @@ class JobTest extends \Codeception\Test\Unit
 
     public function testJobScheduleOptions()
     {
+        $msg='';
         try {
-            new job([
+            new Job([
                 'name'=>'demo',
                 'command'=>'echo "hello world!"'
             ]);
@@ -93,8 +113,9 @@ class JobTest extends \Codeception\Test\Unit
     }
     public function testJobCommandOptions()
     {
+        $msg='';
         try {
-            new job([
+            new Job([
                 'name'=>'demo',
                 'schedule'=>'* * * * *'
             ]);

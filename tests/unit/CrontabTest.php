@@ -34,6 +34,7 @@ class CrontabTest extends \Codeception\Test\Unit
     {
         $jobs=[
             [
+                'class'=>'anxu\Crontab\Job',
                 'name'=>'demo',
                 'schedule'=>'* * * * *',
                 'command'=>'echo "hello world!"',
@@ -142,7 +143,7 @@ class CrontabTest extends \Codeception\Test\Unit
             
         ];
         $a  = new Crontab([
-            'isMuteProcess'=>true
+            'multiprocess'=>true
         ]);
         $a->add($jobs);
 

@@ -1,120 +1,112 @@
 <?php
-
+/**
+ * 计划任务worker
+ */
 namespace anxu\Crontab;
 
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
-use yii\helpers\ArrayHelper;
+use yii\base\Exception;
 
-/**
-* Crontab class
-*/
 class Crontab extends Component
 {
-
+    /**
+     *  $defaultJobClass
+     * @var string
+     */
     private $defaultJobClass = 'anxu\Crontab\Job';
 
-    private $jobs = [];
+    /**
+    * @var array
+    */
+    private $jobs=[];
+
+    /**
+    * @var init
+    */
     private $currentProcess =0;
-
+    /**
+    * @var boolean
+    */
+    public $multiprocess=false;
+    
+    /**
+    * @var init
+    */
     public $maxProcess=2;
-    public $isMuteProcess=false;
-
-
 
     public function __construct(array $config = [])
     {
         parent::__construct($config);
     }
 
-
     /**
-     * Add a job.
+     *
+     * 添加任务
      * [
      *  [
      *      'class'=>'anxu\Crontab\Job'
-     *      'name'=>'',
-     *      'schedule'=>'',
-     *      'command'=>'',
-     *      'maxRuntime'=>''
+     *       ......
      *  ]
      * ]
-     *
-     * @param array $job
-     *
-     * @throws Exception
      */
     public function add(array $jobs)
     {
         foreach ($jobs as $job) {
-            $this->jobs[$job['name']] = ArrayHelper::merge(['class'=>$this->defaultJobClass], $job);
+            $this->jobs[] = $this->createJob($job);
         }
     }
 
     /**
-     * Run all jobs.
+     *执行计划任务
      */
     public function run()
     {
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             throw new NotSupportedException('Window is not supported');
         }
-        if ($this->isMuteProcess) {
-            $this->multiProcessRun();
-        } else {
-            $this->commonRun();
-        }
-    }
 
-    /**
-     * Run all jobs.
-     */
-    public function commonRun()
-    {
-        foreach ($this->jobs as $job) {
-            $jobObj = $this->createJob($job);
-            $jobObj->run();
-        }
-    }
-    /**
-     * Multi-process Run all jobs.
-     */
-    public function multiProcessRun()
-    {
-        foreach ($this->jobs as $job) {
-            $pid = pcntl_fork();
-            if ($pid == -1) {
-                throw new Exception('fork process failed');
-            } elseif ($pid) {
-                $this->currentProcess++;
-                if ($this->currentProcess >= $this->maxProcess) {
-                    pcntl_wait($status, WUNTRACED);
-                    $this->currentProcess--;
+        if ($this->multiprocess) {
+            foreach ($this->jobs as $job) {
+                $pid = pcntl_fork();
+                if ($pid ==0) {
+                    cli_set_process_title("Job");//子进程名
+                    $job->run();
+                    exit();
+                } elseif ($pid ==-1) {
+                    throw new Exception('fork process failed');
+                } else {
+                    $this->currentProcess++;
+                    if ($this->currentProcess >= $this->maxProcess) {
+                        pcntl_wait($status, WUNTRACED);
+                        $this->currentProcess--;
+                    }
                 }
-            } else {
-                cli_set_process_title("phpCrontab");//子进程名
-                $jobObj = $this->createJob($job);
-                $jobObj->run();
-                exit();
+            }
+        } else {
+            foreach ($this->jobs as $job) {
+                $job->run();
             }
         }
     }
 
-
     /**
-     * Creates cron job instance from its array configuration.
-     * @param array $config cron job configuration.
-     * @return CronJob cron job instance.
+     * 创建任务job实例
+     * @param array
+     * @return Job
      */
     protected function createJob(array $job)
     {
-        $jobClass = $job['class'];
-        ArrayHelper::remove($job, 'class');
-        if (!is_a($jobClass, $this->defaultJobClass, true)) {
-            throw new InvalidConfigException('"class" needs to be an instanceof anxu\Crontab\Job');
+        if (!isset($job['class']) || empty($job['class'])) {
+            $job['class'] = $this->defaultJobClass;
         }
-        return Yii::createObject($jobClass, [$job]);
+        $jobObject = Yii::createObject($job);
+
+        if (!$jobObject instanceof $this->defaultJobClass) {
+            throw new InvalidConfigException('"class" must be implements "anxu\Crontab\BaseJob" interface');
+        }
+        return $jobObject;
     }
 }
