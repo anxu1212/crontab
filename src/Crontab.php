@@ -13,26 +13,32 @@ use yii\base\Exception;
 class Crontab extends Component
 {
     /**
-     *  $defaultJobClass
+     *  默认job类
      * @var string
      */
     private $defaultJobClass = 'anxu\Crontab\Job';
 
     /**
+     * 定时任务列表
     * @var array
     */
     private $jobs=[];
 
     /**
+    * 是否多进程
+    * @var boolean
+    */
+    public $multiprocess=true;
+    
+
+    /**
+     * 当前进程数
     * @var init
     */
     private $currentProcess =0;
+
     /**
-    * @var boolean
-    */
-    public $multiprocess=false;
-    
-    /**
+     *最大进程
     * @var init
     */
     public $maxProcess=2;
@@ -102,7 +108,11 @@ class Crontab extends Component
         if (!isset($job['class']) || empty($job['class'])) {
             $job['class'] = $this->defaultJobClass;
         }
-        $jobObject = Yii::createObject($job);
+        try {
+            $jobObject = Yii::createObject($job);
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
+        }
 
         if (!$jobObject instanceof $this->defaultJobClass) {
             throw new InvalidConfigException('"class" must be implements "anxu\Crontab\BaseJob" interface');

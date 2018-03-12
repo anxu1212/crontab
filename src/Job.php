@@ -21,6 +21,7 @@ class Job extends BaseObject implements BaseJob
     private $tmpfileHandle =null;
 
     /**
+     * tmp目录
     * @var string
     */
     protected $tmpDir;
@@ -44,12 +45,12 @@ class Job extends BaseObject implements BaseJob
     }
 
     /**
+     * 任务运行
     * job run
     * @return void
     */
     public function run()
     {
-
         if (!$this->isDo()) {
             return;
         }
@@ -63,8 +64,7 @@ class Job extends BaseObject implements BaseJob
     
             $this->runCommand();
         } catch (Exception $e) {
-            Yii::error("job:".$this->name."Error:".$e->getMessage(), __METHOD__);
-            return;
+            throw new Exception($e->getMessage());
         }
 
         if ($this->tmpfileHandle !==null) {
@@ -72,6 +72,10 @@ class Job extends BaseObject implements BaseJob
         }
     }
 
+    /**
+     * 判断是否执行
+     * @return boolean
+     */
     protected function isDo()
     {
         $dateTime = \DateTime::createFromFormat('Y-m-d H:i:s', $this->schedule);
@@ -81,6 +85,7 @@ class Job extends BaseObject implements BaseJob
 
         return CronExpression::factory($this->schedule)->isDue();
     }
+
     /**
      * 根据临时文件检查执行是否超时
     * @param string $tmpFile
@@ -132,11 +137,11 @@ class Job extends BaseObject implements BaseJob
     }
 
     /**
+     * 清理临时文件内容，释放锁
      * @param string $tmpFile
-     *
      * @throws Exception
      */
-    protected function unlockFile($tmpFile)
+    protected function unlockFile()
     {
         ftruncate($this->tmpfileHandle, 0);
         flock($this->tmpfileHandle, LOCK_UN);
@@ -169,6 +174,7 @@ class Job extends BaseObject implements BaseJob
     }
        
     /**
+     * 获取临时文件路径
     * @return string
     */
     protected function tmpFilePath()
@@ -179,12 +185,12 @@ class Job extends BaseObject implements BaseJob
     }
     /**
      * 执行脚本或命令
-     * @return [type] [description]
+     * @return void
      */
     protected function runCommand()
     {
         $output =$this->getOutputFile();
-        exec("$this->command 1>>".$output." 2>&1", $dummy, $retval);
+        exec("$this->command 1>>".$output." 2>&1");
     }
 
     /**
@@ -205,7 +211,7 @@ class Job extends BaseObject implements BaseJob
     }
 
     /**
-     * 获取临时文件目录
+     * 获取系统tmp目录
      * @return string
      */
     protected function getTempDir()
